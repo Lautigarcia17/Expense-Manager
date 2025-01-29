@@ -83,28 +83,49 @@ export class AuthController{
         });
     }
 
-    static async verifyToken(req, res){
-        const { token } = req.cookies;
-        if (!token) return res.send(false);
-
-        jwt.verify(token, TOKEN_SECRET, async (error, user)=>{
-            if (error) return res.sendStatus(401);
-            const userFound = await User.findById(user.id);
-            if(!userFound) return res.sendStatus(401);
-
+    static async verifyToken(req, res) {
+        try {
+            const { token } = req.cookies;
+    
+            if (!token) {
+                return res.status(401).json({ message: 'No token provided' });
+            }
+    
+            const decoded = jwt.verify(token, TOKEN_SECRET);
+    
+            const userFound = await User.findById(decoded.id);
+            if (!userFound) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+    
             return res.json({
                 id: userFound.id,
                 email: userFound.email,
-            })
-        })
+            });
+        } catch (error) {
+            console.error(error);
+            if (error.name === 'TokenExpiredError') {
+                return res.status(401).json({ message: 'Token expired' });
+            } else if (error.name === 'JsonWebTokenError') {
+                return res.status(401).json({ message: 'Invalid token' });
+            }
+    
+            return res.status(500).json({ message: 'Internal server error' });
+        }
     }
 
-    static async logout(req, res){
-        res.cookie('token',"", {
-            httpOnly: true,
-            secure: true,
-            expires: new Date(0)
-        })
-        return res.sendStatus(200);
+    static async logout(req, res) {
+        try {
+            res.clearCookie('token', {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'Strict',
+            });
+    
+            return res.json({ message: 'Logged out successfully' });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Error logging out' });
+        }
     }
 }
