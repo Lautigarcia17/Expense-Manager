@@ -1,14 +1,15 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import styles from './Login.module.css'
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Box, TextField, Button } from '@mui/material';
+import { Box, TextField, Button, InputAdornment, IconButton } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
-import MarkunreadIcon from '@mui/icons-material/Markunread';
-import SendIcon from '@mui/icons-material/Send';
+import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 function Login() {
+  const [showPassword, setShowPassword] = useState(false);
   const form: any = useRef(null);
   const { register, formState: { errors }, reset, handleSubmit } = useForm({
     mode: 'onChange'
@@ -24,13 +25,13 @@ function Login() {
             backgroundColor: 'transparent',
             width: '300px',
             '&:before': {
-              borderBottom: '2px solid #0a9eb1',
+              borderBottom: '2px solid #60495A',
             },
             '&:hover:not(.Mui-disabled):before': {
-              borderBottom: '2px solid #0a9eb1',
+              borderBottom: '2px solid #60495A',
             },
             '&:after': {
-              borderBottom: '2px solid #0a9eb1',
+              borderBottom: '2px solid #60495A',
             },
             ['@media (max-width:450px)']: {
               width: '200px'
@@ -42,7 +43,7 @@ function Login() {
         styleOverrides: {
           root: {
             color: 'white',
-            fontSize: '25px',
+            fontSize: '22px',
             transform: 'translate(0, 13px) scale(1)',
             '&.Mui-focused': {
               color: 'white',
@@ -59,8 +60,8 @@ function Login() {
       MuiSvgIcon: {
         styleOverrides: {
           root: {
-            color: '#F0EBD8',
-            fontSize: '30px',
+            color: '#FAEDCD',
+            fontSize: '28px',
             marginRight: '20px'
           }
         }
@@ -85,54 +86,61 @@ function Login() {
                     id="input-with-sx"
                     label="Email"
                     variant="standard"
+                    autoComplete='off'
                     {...register('user_email', {
                       required: true,
                       pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                     })}
                   />
                 </Box>
-                <p className={`${styles.messageError} ${errors.user_email ? styles.visible : ''}`}>
-                  {errors.user_email?.type === 'required' && 'El mail es requerido'}
-                  {errors.user_email?.type === 'pattern' && 'Formato de mail invalido'}
-                </p>
               </div>
 
-              {/* Message Input */}
+              {/* Password Input */}
               <div className={styles.inputs}>
                 <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                  <MarkunreadIcon />
+                  <LockOutlinedIcon fontSize='small'/>
+                  
                   <TextField
                     id="filled-multiline-flexible"
                     label="Password"
-                    multiline
                     variant="standard"
-                    {...register('message', {
+                    type={showPassword ? "text" : "password"} 
+                    autoComplete="off"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                            {showPassword ? <VisibilityOff sx={{ fontSize: "20px" }} /> : <Visibility sx={{ fontSize: "20px" }}/>}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                    {...register('password', {
                       required: true,
                     })}
                   />
                 </Box>
-                <p className={`${styles.messageError} ${errors.message?.type === 'required' ? 'visible' : ''}`}>
-                  El mensaje es requerido
-                </p>
               </div>
             </div>
 
           </ThemeProvider>
-          <Button type='submit' size='large' variant="contained" endIcon={<SendIcon />} sx={{
-            backgroundColor: '#0a9eb1',
+          <Button type='submit' size='large' variant="contained" startIcon={<DoubleArrowIcon />} sx={{
+            backgroundColor: '#60495A',
             color: '#F0EBD8',
-  
+            fontWeight: 700,
+            gap: '10px',
+            fontSize: '16px',
+            fontFamily: 'Ubuntu',
             '&:hover': {
-              backgroundColor: '#268693',
+              backgroundColor: '#755B71',
             },
           }}>
-            Login
+            Log in
           </Button>
+          
+          <h1 className={styles.textRegister}>Don't have an account? <button>Sign Up</button></h1>
         </form>
-
       </div>
-
-
     </>
 
   );
