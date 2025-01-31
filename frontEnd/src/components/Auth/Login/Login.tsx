@@ -8,7 +8,7 @@ import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
-function Login() {
+function Login( {setShowLogin} : {setShowLogin: React.Dispatch<React.SetStateAction<boolean>>}) {
   const [showPassword, setShowPassword] = useState(false);
   const form: any = useRef(null);
   const { register, formState: { errors }, reset, handleSubmit } = useForm({
@@ -138,7 +138,7 @@ function Login() {
             Log in
           </Button>
           
-          <h1 className={styles.textRegister}>Don't have an account? <button>Sign Up</button></h1>
+          <h1 className={styles.textRegister}>Don't have an account? <button type='button' onClick={()=> setShowLogin(false)}>Sign Up</button></h1>
         </form>
       </div>
     </>
