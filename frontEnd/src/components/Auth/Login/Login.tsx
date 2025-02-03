@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import styles from './Login.module.css'
+import styles from '../../../pages/AuthPage/AuthPage.module.css';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Box, TextField, Button, InputAdornment, IconButton } from '@mui/material';
 import { useForm } from 'react-hook-form';
@@ -7,14 +7,21 @@ import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema } from '../../../schemas/auth.schema';
+import { logInRequest } from '../../../api/auth';
+import { User } from '../../../types/interface/auth';
+import { isAxiosError } from 'axios';
+import {ERROR_MESSAGES} from '../../../constants/errorMessages';
 
 function Login( {setShowLogin} : {setShowLogin: React.Dispatch<React.SetStateAction<boolean>>}) {
   const [showPassword, setShowPassword] = useState(false);
   const form: any = useRef(null);
-  const { register, formState: { errors }, reset, handleSubmit } = useForm({
-    mode: 'onChange'
+  const { register, formState: { errors }, watch, reset, handleSubmit } = useForm<User>({
+    resolver: zodResolver(loginSchema),
+    mode: 'onSubmit'
   });
-
+  const passwordValue = watch("password");
 
   const theme = createTheme({
     components: {
@@ -69,13 +76,25 @@ function Login( {setShowLogin} : {setShowLogin: React.Dispatch<React.SetStateAct
     },
   });
 
-
+  
+  const logIn = async (dataUser: User) => {
+    try {
+      const response = await logInRequest(dataUser)
+      console.log(response.data.message);
+    } catch (error) {
+      if (isAxiosError(error)) {
+        console.error("Request error:", error.response?.data.message  || error.message);
+        alert(ERROR_MESSAGES[error.response?.data.code ] || "Ocurrió un error inesperado");
+      }
+      
+    }
+  };
 
   return (
     <>
       <h1 className={styles.titleAuth}>LOGIN</h1>
       <div className={styles.contentCard}>
-        <form ref={form} className={styles.form}>
+        <form ref={form} className={styles.form} onSubmit={handleSubmit(logIn)}>
           <ThemeProvider theme={theme}>
             <div className={styles.divInputs}>
               {/* Email Input */}
@@ -87,39 +106,37 @@ function Login( {setShowLogin} : {setShowLogin: React.Dispatch<React.SetStateAct
                     label="Email"
                     variant="standard"
                     autoComplete='off'
-                    {...register('user_email', {
-                      required: true,
-                      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                    })}
+                    error={!!errors.email}
+                    {...register('email')}
                   />
                 </Box>
+                <p className={`${styles.messageError} ${errors.email ? styles.visible : ''}`}>{errors.email?.message?.toString()}</p>
               </div>
-
+              
               {/* Password Input */}
               <div className={styles.inputs}>
-                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                  <LockOutlinedIcon fontSize='small'/>
-                  
+                <Box sx={{ display: "flex", alignItems: "flex-end" }}>
+                  <LockOutlinedIcon fontSize="small" />
                   <TextField
-                    id="filled-multiline-flexible"
                     label="Password"
                     variant="standard"
-                    type={showPassword ? "text" : "password"} 
+                    type={showPassword ? "text" : "password"}
                     autoComplete="off"
+                    error={!!errors.password}
                     InputProps={{
-                      endAdornment: (
+                      endAdornment: passwordValue && (
                         <InputAdornment position="end">
-                          <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                            {showPassword ? <VisibilityOff sx={{ fontSize: "20px" }} /> : <Visibility sx={{ fontSize: "20px" }}/>}
+                          <IconButton onClick={() => setShowPassword((prev) => !prev)} edge="end">
+                            {showPassword ? <VisibilityOff sx={{ fontSize: "20px" }} /> : <Visibility sx={{ fontSize: "20px" }} />}
                           </IconButton>
                         </InputAdornment>
                       ),
                     }}
-                    {...register('password', {
-                      required: true,
-                    })}
+                    {...register("password")}
                   />
                 </Box>
+                <p className={`${styles.messageError} ${errors.password ? styles.visible : ''}`}>{errors.password?.message?.toString()}</p>
+
               </div>
             </div>
 

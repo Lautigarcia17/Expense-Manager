@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import styles from './Register.module.css'
+import styles from '../../../pages/AuthPage/AuthPage.module.css';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Box, TextField, Button, InputAdornment, IconButton } from '@mui/material';
 import { useForm } from 'react-hook-form';
@@ -16,7 +16,7 @@ function Register({setShowLogin} : {setShowLogin: React.Dispatch<React.SetStateA
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register, formState: { errors }, watch, setValue, reset, handleSubmit } = useForm({
     resolver: zodResolver(registerSchema),
-    mode: 'onChange'
+    mode: 'onSubmit'
   });
   const [focusConfirmPassword, setFocusConfirmPassword] = useState(false);
   const passwordValue = watch("password");

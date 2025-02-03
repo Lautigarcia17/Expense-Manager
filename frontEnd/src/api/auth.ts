@@ -2,7 +2,7 @@
 import { User } from '../types/interface/auth';
 import axios from './axiosConfig'
 
-export function loginRequest(user  : User){
+export function logInRequest(user  : User){
     return axios.post('/auth/login', user)
 }
 

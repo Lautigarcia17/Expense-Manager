@@ -3,9 +3,9 @@ import { createAccessToken } from '../libs/jwt.js';
 import User from '../models/mongodb/user.model.js'
 import bcrypt from 'bcryptjs'
 import jwt from "jsonwebtoken";
+import { ERROR_MESSAGES} from '../constants/errorMessages.js'
 
-export class AuthController{
-
+export class AuthController{    
     static async register(req,res) {
         try {
             const {email, password} = req.body;
@@ -14,7 +14,8 @@ export class AuthController{
     
             if (userFound) {
                 return res.status(400).json({
-                    message: ["The email is already in use"],
+                    code: 'EMAIL_IN_USE',
+                    message: ERROR_CODES.auth.EMAIL_IN_USE,
                 });
             }
             const passwordHash = await bcrypt.hash(password, 10);
@@ -41,7 +42,10 @@ export class AuthController{
                 email: userSaved.email
             })
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            return res.status(500).json({ 
+                code: 'INTERNAL_SERVER_ERROR',
+                message: ERROR_MESSAGES.general.INTERNAL_SERVER_ERROR
+            });
         }
 
     } 
@@ -53,14 +57,16 @@ export class AuthController{
 
         if (!userFound) {
             return res.status(400).json({
-                message: ["The email does not exist"],
+                code: 'EMAIL_NOT_FOUND',
+                message: ERROR_MESSAGES.auth.EMAIL_NOT_FOUND,
             });
         }
 
         const isEqual = await bcrypt.compare(password, userFound.password);
         if (!isEqual) {
             return res.status(400).json({
-              message: ["The password is incorrect"],
+              code: 'INCORRECT_PASSWORD',
+              message: ERROR_MESSAGES.auth.INCORRECT_PASSWORD,
             });
         }
 
@@ -88,14 +94,20 @@ export class AuthController{
             const { token } = req.cookies;
     
             if (!token) {
-                return res.status(401).json({ message: 'No token provided' });
+                return res.status(401).json({
+                    code:  'NO_TOKEN_PROVIDED',
+                    message: ERROR_MESSAGES.general.NO_TOKEN_PROVIDED
+                });
             }
     
             const decoded = jwt.verify(token, TOKEN_SECRET);
     
             const userFound = await User.findById(decoded.id);
             if (!userFound) {
-                return res.status(404).json({ message: 'User not found' });
+                return res.status(404).json({ 
+                    code: 'USER_NOT_FOUND',
+                    message: ERROR_MESSAGES.auth.USER_NOT_FOUND 
+                });
             }
     
             return res.json({
@@ -105,12 +117,21 @@ export class AuthController{
         } catch (error) {
             console.error(error);
             if (error.name === 'TokenExpiredError') {
-                return res.status(401).json({ message: 'Token expired' });
+                return res.status(401).json({ 
+                    code: 'TOKEN_EXPIRED',
+                    message: ERROR_MESSAGES.general.TOKEN_EXPIRED 
+                });
             } else if (error.name === 'JsonWebTokenError') {
-                return res.status(401).json({ message: 'Invalid token' });
+                return res.status(401).json({ 
+                    code: 'INVALID_TOKEN',
+                    message: ERROR_MESSAGES.general.INVALID_TOKEN 
+                });
             }
     
-            return res.status(500).json({ message: 'Internal server error' });
+            return res.status(500).json({
+                code: 'INTERNAL_SERVER_ERROR',
+                message: ERROR_MESSAGES.general.INTERNAL_SERVER_ERROR 
+            });
         }
     }
 
@@ -125,7 +146,10 @@ export class AuthController{
             return res.json({ message: 'Logged out successfully' });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ message: 'Error logging out' });
+            return res.status(500).json({
+                code: 'LOGOUT_ERROR',
+                message: ERROR_MESSAGES.auth.LOGOUT_ERROR 
+            });
         }
     }
 }

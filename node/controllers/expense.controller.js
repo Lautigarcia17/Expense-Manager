@@ -1,14 +1,26 @@
 
 import Expense from '../models/mongodb/expense.model.js'
+import { ERROR_MESSAGES} from '../constants/errorMessages.js'
 
 export class ExpenseController{
 
     static async getAll(req,res){
         try {
             const expenses = await Expense.find({ user_id: req.user.id });
+            if (!expenses || expenses.length === 0) {
+                return res.status(404).json({ 
+                    code: 'EXPENSE_NOT_FOUND_USER',
+                    message: ERROR_MESSAGES.expenses.EXPENSE_NOT_FOUND_USER 
+                }
+                );
+            }
             res.json(expenses);
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            console.log(error);
+            return res.status(500).json({ 
+                code: 'INTERNAL_SERVER_ERROR',
+                message: ERROR_MESSAGES.general.INTERNAL_SERVER_ERROR
+            });
         }
     }
     static async getById(req,res){
@@ -18,7 +30,11 @@ export class ExpenseController{
             if (!expense) return res.status(404).json({ message: "Expense not found" });
             return res.json(expense);
           } catch (error) {
-            return res.status(500).json({ message: error.message });
+            console.log(error);
+            return res.status(500).json({ 
+                code: 'INTERNAL_SERVER_ERROR',
+                message: ERROR_MESSAGES.general.INTERNAL_SERVER_ERROR
+            });
           }
     }
     static async createExpense(req,res){
@@ -41,20 +57,37 @@ export class ExpenseController{
                 message: 'Expense added successfully'
             })
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            console.log(error);
+            return res.status(500).json({ 
+                code: 'INTERNAL_SERVER_ERROR',
+                message: ERROR_MESSAGES.general.INTERNAL_SERVER_ERROR
+            });
         }
 
 
     }
     static async deleteExpense(req,res){
-        const {id} = req.params;
+
+        try {
+            const {id} = req.params;
         
-        const deletedExpense = await Expense.findByIdAndDelete(id);
-        if (!deletedExpense) {
-            res.status(404).json({message: "Expense not found"});
+            const deletedExpense = await Expense.findByIdAndDelete(id);
+            if (!deletedExpense) {
+                return res.status(404).json({
+                    code: "EXPENSE_NOT_FOUND",
+                    message: ERROR_MESSAGES.expenses.EXPENSE_NOT_FOUND
+                });
+            }
+    
+            res.status(201).json({message: 'Expense deleted successfully'});
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ 
+                code: 'INTERNAL_SERVER_ERROR',
+                message: ERROR_MESSAGES.general.INTERNAL_SERVER_ERROR
+            }); 
         }
 
-        res.status(201).json({message: 'Expense deleted successfully'});
     }
 
     static async updateExpense(req, res) {
@@ -66,18 +99,28 @@ export class ExpenseController{
             );
     
             if (Object.keys(updates).length === 0) {
-                return res.status(400).json({ message: 'No valid fields provided for update' });
+                return res.status(400).json({ 
+                    code: 'NO_VALID_FIELDS_UPDATE',
+                    message: ERROR_MESSAGES.expenses.NO_VALID_FIELDS_UPDATE
+                });
             }
     
             const updatedExpense = await Expense.findOneAndUpdate({ _id: id }, updates, { new: true });
     
             if (!updatedExpense) {
-                return res.status(404).json({ message: 'Expense not found' });
+                return res.status(404).json({
+                    code: "EXPENSE_NOT_FOUND",
+                    message: ERROR_MESSAGES.expenses.EXPENSE_NOT_FOUND
+                });
             }
     
             res.json({ id: updatedExpense._id, updates });
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            console.log(error);
+            return res.status(500).json({ 
+                code: 'INTERNAL_SERVER_ERROR',
+                message: ERROR_MESSAGES.general.INTERNAL_SERVER_ERROR
+            });
         }
     }
 }
